@@ -140,7 +140,15 @@ const startCountdown = () => {
   }, 1000);
 };
 
-// Toggle between play and pause
+// Function to stop all sounds
+const stopAllSounds = () => {
+  Object.values(sounds).forEach((sound) => {
+    sound.pause();
+    sound.currentTime = 0;
+  });
+};
+
+// Modify toggleTimer to stop sound when pausing
 const toggleTimer = () => {
   const toggleButton = document.getElementById('toggle-btn');
   const resetButton = document.getElementById('reset-btn');
@@ -152,6 +160,7 @@ const toggleTimer = () => {
     isPaused = true;
     toggleButton.textContent = 'Play';
     resetButton.style.display = 'inline';
+    stopAllSounds(); // Stop sound on pause
   }
 };
 
@@ -167,6 +176,8 @@ const resetTimer = () => {
 
 // Open settings modal
 const openSettingsModal = () => {
+  stopAllSounds(); // Stop sound when settings are opened
+
   const modal = document.createElement('div');
   modal.id = 'settings-modal';
   modal.style.position = 'fixed';
