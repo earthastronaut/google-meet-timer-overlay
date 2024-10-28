@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Google Meet Countdown Timer",
+  "version": "1.0",
+  "description": "A countdown timer for Google Meet with controls to start, pause, and reset.",
+  "permissions": ["activeTab", "storage"],
+  "action": {
+    "default_icon": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://meet.google.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
