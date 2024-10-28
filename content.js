@@ -101,7 +101,7 @@ const addOverlayToVideo = () => {
       videoContainers[0].parentNode.style.position = 'relative';
       videoContainers[0].parentNode.appendChild(timerOverlay);
 
-      // Attach event listeners once the elements are in the DOM
+      // Attach event listeners after the overlay is added
       attachEventListeners();
     }
   }
@@ -118,11 +118,14 @@ let isPaused = true;
 
 // Convert seconds to display format (MM:SS)
 const updateDisplay = () => {
+  const timerDisplay = document.getElementById('timer-display');
+  if (!timerDisplay) return; // Exit if timer-display is not found
+
   const isNegative = remainingTime < 0;
   const absTime = Math.abs(remainingTime);
   const minutes = Math.floor(absTime / 60);
   const seconds = absTime % 60;
-  document.getElementById('timer-display').textContent = `${isNegative ? '-' : ''}${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  timerDisplay.textContent = `${isNegative ? '-' : ''}${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
 // Start countdown
@@ -252,9 +255,18 @@ const openSettingsModal = () => {
 
 // Function to attach event listeners once elements are added to the DOM
 const attachEventListeners = () => {
-  document.getElementById('toggle-btn').addEventListener('click', toggleTimer);
-  document.getElementById('reset-btn').addEventListener('click', resetTimer);
-  document.getElementById('settings-btn').addEventListener('click', openSettingsModal);
+  const toggleButton = document.getElementById('toggle-btn');
+  const resetButton = document.getElementById('reset-btn');
+  const settingsButton = document.getElementById('settings-btn');
+  const timerDisplay = document.getElementById('timer-display');
+
+  // Check that each element exists before adding event listeners or updating properties
+  if (toggleButton) toggleButton.addEventListener('click', toggleTimer);
+  if (resetButton) resetButton.addEventListener('click', resetTimer);
+  if (settingsButton) settingsButton.addEventListener('click', openSettingsModal);
+
+  // Call updateDisplay to set the initial timer display
+  if (timerDisplay) updateDisplay();
 };
 
 // Initial display setup and apply saved position
