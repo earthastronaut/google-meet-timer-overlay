@@ -12,8 +12,7 @@ timerOverlay.style.borderRadius = '5px';
 timerOverlay.style.zIndex = '9999';
 timerOverlay.innerHTML = `
   <div id="timer-display">00:00</div>
-  <button id="play-btn">Play</button>
-  <button id="pause-btn">Pause</button>
+  <button id="toggle-btn">Start</button>
   <button id="settings-btn">Settings</button>
 `;
 
@@ -57,13 +56,22 @@ const startCountdown = () => {
       updateDisplay();
     } else if (remainingTime <= 0) {
       clearInterval(countdown);
+      document.getElementById('toggle-btn').textContent = 'Start';
+      isPaused = true;
     }
   }, 1000);
 };
 
-// Pause countdown
-const pauseCountdown = () => {
-  isPaused = true;
+// Toggle between start and pause
+const toggleTimer = () => {
+  const toggleButton = document.getElementById('toggle-btn');
+  if (isPaused) {
+    startCountdown();
+    toggleButton.textContent = 'Pause';
+  } else {
+    isPaused = true;
+    toggleButton.textContent = 'Start';
+  }
 };
 
 // Open settings modal
@@ -103,8 +111,7 @@ const openSettingsModal = () => {
 
 // Function to attach event listeners once elements are added to the DOM
 const attachEventListeners = () => {
-  document.getElementById('play-btn').addEventListener('click', startCountdown);
-  document.getElementById('pause-btn').addEventListener('click', pauseCountdown);
+  document.getElementById('toggle-btn').addEventListener('click', toggleTimer);
   document.getElementById('settings-btn').addEventListener('click', openSettingsModal);
 };
 
