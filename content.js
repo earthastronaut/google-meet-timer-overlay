@@ -1,9 +1,15 @@
+// Initial default values
+let defaultMinutes = 2;
+let defaultSeconds = 0;
+let startingTime = defaultMinutes * 60; // Save initial start time to reset to
+let remainingTime = startingTime;
+
 // Create the timer overlay and controls
 const timerOverlay = document.createElement('div');
 timerOverlay.id = 'meet-timer-overlay';
 timerOverlay.style.position = 'absolute';
-timerOverlay.style.bottom = '10px';
-timerOverlay.style.right = '10px';
+timerOverlay.style.top = '10px';
+timerOverlay.style.left = '10px';
 timerOverlay.style.padding = '5px 10px';
 timerOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
 timerOverlay.style.color = 'white';
@@ -39,7 +45,6 @@ observer.observe(document.body, { childList: true, subtree: true });
 // Timer logic
 let countdown;
 let isPaused = true;
-let remainingTime = 0;
 
 const updateDisplay = () => {
   const isNegative = remainingTime < 0;
@@ -80,7 +85,7 @@ const toggleTimer = () => {
 const resetTimer = () => {
   isPaused = true;
   clearInterval(countdown);
-  remainingTime = 0;
+  remainingTime = startingTime;
   updateDisplay();
   document.getElementById('toggle-btn').textContent = 'Play';
   document.getElementById('reset-btn').style.display = 'none';
@@ -101,9 +106,9 @@ const openSettingsModal = () => {
   modal.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
   modal.innerHTML = `
     <label for="start-minutes">Minutes:</label>
-    <input type="number" id="start-minutes" min="0" max="120" value="${Math.floor(Math.abs(remainingTime) / 60)}">
+    <input type="number" id="start-minutes" min="0" max="120" value="${Math.floor(startingTime / 60)}">
     <label for="start-seconds">Seconds:</label>
-    <input type="number" id="start-seconds" min="0" max="59" value="${Math.abs(remainingTime) % 60}">
+    <input type="number" id="start-seconds" min="0" max="59" value="${startingTime % 60}">
     <div>
       <button id="quick-1min">1 Minute</button>
       <button id="quick-3min">3 Minutes</button>
@@ -111,23 +116,26 @@ const openSettingsModal = () => {
       <button id="quick-10min">10 Minutes</button>
     </div>
     <div>
-      <label>Vertical Position:</label>
-      <select id="vertical-position">
-        <option value="top">Top</option>
-        <option value="middle">Middle</option>
-        <option value="bottom" selected>Bottom</option>
-      </select>
-      <label>Horizontal Position:</label>
-      <select id="horizontal-position">
-        <option value="left">Left</option>
-        <option value="center">Center</option>
-        <option value="right" selected>Right</option>
+      <label>Timer Position:</label>
+      <select id="timer-position">
+        <option value="top-left">Top Left</option>
+        <option value="top-center">Top Center</option>
+        <option value="top-right">Top Right</option>
+        <option value="middle-left">Middle Left</option>
+        <option value="middle-center">Middle Center</option>
+        <option value="middle-right">Middle Right</option>
+        <option value="bottom-left">Bottom Left</option>
+        <option value="bottom-center">Bottom Center</option>
+        <option value="bottom-right">Bottom Right</option>
       </select>
     </div>
     <button id="save-settings-btn">Save</button>
     <button id="close-settings-btn">Close</button>
   `;
   document.body.appendChild(modal);
+
+  // Set default position
+  document.getElementById('timer-position').value = 'top-left';
 
   // Event listeners for quick-select buttons
   document.getElementById('quick-1min').addEventListener('click', () => setQuickTime(1));
@@ -150,20 +158,68 @@ const openSettingsModal = () => {
   document.getElementById('save-settings-btn').addEventListener('click', () => {
     const newMinutes = parseInt(document.getElementById('start-minutes').value, 10);
     const newSeconds = parseInt(document.getElementById('start-seconds').value, 10);
-    remainingTime = newMinutes * 60 + newSeconds;
+    startingTime = newMinutes * 60 + newSeconds;
+    remainingTime = startingTime;
     updateDisplay();
 
-    // Update timer position based on selected options
-    const verticalPos = document.getElementById('vertical-position').value;
-    const horizontalPos = document.getElementById('horizontal-position').value;
-    timerOverlay.style.top = verticalPos === 'top' ? '10px' : verticalPos === 'middle' ? '50%' : 'auto';
-    timerOverlay.style.bottom = verticalPos === 'bottom' ? '10px' : 'auto';
-    timerOverlay.style.left = horizontalPos === 'left' ? '10px' : horizontalPos === 'center' ? '50%' : 'auto';
-    timerOverlay.style.right = horizontalPos === 'right' ? '10px' : 'auto';
-    timerOverlay.style.transform = horizontalPos === 'center' ? 'translateX(-50%)' : verticalPos === 'middle' ? 'translateY(-50%)' : '';
+    // Update timer position based on selected option
+    const position = document.getElementById('timer-position').value;
+    setPosition(position);
 
     document.body.removeChild(modal);
   });
+};
+
+// Set timer position
+const setPosition = (position) => {
+  // Reset position styles
+  timerOverlay.style.top = timerOverlay.style.bottom = timerOverlay.style.left = timerOverlay.style.right = 'auto';
+  timerOverlay.style.transform = '';
+
+  // Apply new position styles
+  switch (position) {
+    case 'top-left':
+      timerOverlay.style.top = '10px';
+      timerOverlay.style.left = '10px';
+      break;
+    case 'top-center':
+      timerOverlay.style.top = '10px';
+      timerOverlay.style.left = '50%';
+      timerOverlay.style.transform = 'translateX(-50%)';
+      break;
+    case 'top-right':
+      timerOverlay.style.top = '10px';
+      timerOverlay.style.right = '10px';
+      break;
+    case 'middle-left':
+      timerOverlay.style.top = '50%';
+      timerOverlay.style.left = '10px';
+      timerOverlay.style.transform = 'translateY(-50%)';
+      break;
+    case 'middle-center':
+      timerOverlay.style.top = '50%';
+      timerOverlay.style.left = '50%';
+      timerOverlay.style.transform = 'translate(-50%, -50%)';
+      break;
+    case 'middle-right':
+      timerOverlay.style.top = '50%';
+      timerOverlay.style.right = '10px';
+      timerOverlay.style.transform = 'translateY(-50%)';
+      break;
+    case 'bottom-left':
+      timerOverlay.style.bottom = '10px';
+      timerOverlay.style.left = '10px';
+      break;
+    case 'bottom-center':
+      timerOverlay.style.bottom = '10px';
+      timerOverlay.style.left = '50%';
+      timerOverlay.style.transform = 'translateX(-50%)';
+      break;
+    case 'bottom-right':
+      timerOverlay.style.bottom = '10px';
+      timerOverlay.style.right = '10px';
+      break;
+  }
 };
 
 // Function to attach event listeners once elements are added to the DOM
@@ -173,5 +229,6 @@ const attachEventListeners = () => {
   document.getElementById('settings-btn').addEventListener('click', openSettingsModal);
 };
 
-// Initial update display
+// Initial display setup
 updateDisplay();
+setPosition('top-left');
