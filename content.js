@@ -5,6 +5,12 @@ let remainingTime = startingTime;
 let selectedSound = 'chime'; // Default sound key
 let defaultPosition = 'top-left'; // Default timer position
 
+// Quick select options in seconds
+const quickSelect1Min = 60;    // 1 minute
+const quickSelect2Min = 120;   // 2 minutes
+const quickSelect5Min = 300;   // 5 minutes
+const quickSelect10Min = 600;  // 10 minutes
+
 // Preload audio elements
 const sounds = {
   chime: new Audio(chrome.runtime.getURL('audio/chime.mp3')),
@@ -182,6 +188,22 @@ const resetTimer = () => {
   document.getElementById('reset-btn').style.display = 'none';
 };
 
+// Function to set the timer time immediately based on quick select (in seconds)
+const setQuickSelectTime = (seconds) => {
+  remainingTime = seconds;
+  updateDisplay();
+};
+
+
+// Function to close the settings modal
+const closeSettingsModal = () => {
+  const modal = document.getElementById('settings-modal');
+  if (modal) {
+    document.body.removeChild(modal);
+  }
+};
+
+
 // Open settings modal
 const openSettingsModal = () => {
   stopAllSounds(); // Stop sound when settings are opened
@@ -198,10 +220,21 @@ const openSettingsModal = () => {
   modal.style.zIndex = '10000';
   modal.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
   modal.innerHTML = `
-    <label for="start-minutes">Minutes:</label>
-    <input type="number" id="start-minutes" min="0" max="120" value="${Math.floor(startingTime / 60)}">
-    <label for="start-seconds">Seconds:</label>
-    <input type="number" id="start-seconds" min="0" max="59" value="${startingTime % 60}">
+    <div>
+      <label for="start-minutes">Minutes:</label>
+      <input type="number" id="start-minutes" min="0" max="120" value="${Math.floor(startingTime / 60)}">
+      <label for="start-seconds">Seconds:</label>
+      <input type="number" id="start-seconds" min="0" max="59" value="${startingTime % 60}">
+    </div>
+    <div>
+      <label>Quick Select Timer:</label>
+      <div>
+        <button id="quick-select-1min">1 Minute</button>
+        <button id="quick-select-2min">2 Minutes</button>
+        <button id="quick-select-5min">5 Minutes</button>
+        <button id="quick-select-10min">10 Minutes</button>
+      </div>
+    </div>
     <div>
       <label>Timer Position:</label>
       <select id="timer-position">
@@ -232,11 +265,26 @@ const openSettingsModal = () => {
   // Set default values in settings
   document.getElementById('timer-position').value = defaultPosition;
   document.getElementById('sound-select').value = selectedSound;
-
-  // Close modal
-  document.getElementById('close-settings-btn').addEventListener('click', () => {
-    document.body.removeChild(modal);
+  // Event listeners for quick select buttons to set time and close modal
+  document.getElementById('quick-select-1min').addEventListener('click', () => {
+    setQuickSelectTime(quickSelect1Min);
+    closeSettingsModal();
   });
+  document.getElementById('quick-select-2min').addEventListener('click', () => {
+    setQuickSelectTime(quickSelect2Min);
+    closeSettingsModal();
+  });
+  document.getElementById('quick-select-5min').addEventListener('click', () => {
+    setQuickSelectTime(quickSelect5Min);
+    closeSettingsModal();
+  });
+  document.getElementById('quick-select-10min').addEventListener('click', () => {
+    setQuickSelectTime(quickSelect10Min);
+    closeSettingsModal();
+  });
+
+  // Event listeners for saving and closing settings
+  document.getElementById('close-settings-btn').addEventListener('click', closeSettingsModal);
 
   // Save settings
   document.getElementById('save-settings-btn').addEventListener('click', () => {
