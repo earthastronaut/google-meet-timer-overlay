@@ -16,9 +16,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "audio/chime.mp3",
-        "audio/beep.mp3",
-        "audio/alarm.mp3"
+        "audio/*"
       ],
       "matches": ["<all_urls>"]
     }

@@ -183,6 +183,7 @@ const toggleTimer = () => {
 
 // Reset the timer
 const resetTimer = () => {
+  stopAllSounds();
   isPaused = true;
   clearInterval(countdown);
   remainingTime = startingTime;
@@ -311,8 +312,7 @@ const createSettingsSection = () => {
   const soundSelect = document.createElement('select');
   soundSelect.id = 'sound-select';
 
-  const soundOptions = ["chime", "beep", "alarm"];
-  soundOptions.forEach(sound => {
+  Object.keys(sounds).forEach(sound => {
     const option = document.createElement('option');
     option.value = sound;
     option.textContent = sound.charAt(0).toUpperCase() + sound.slice(1); // Capitalize first letter
