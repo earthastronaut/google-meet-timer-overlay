@@ -70,10 +70,15 @@ const setPosition = (position) => {
   }
 };
 
-// Retrieve the saved default position on load
-chrome.storage.sync.get(['timerPosition'], (result) => {
+// Retrieve saved timer position and sound selection on load
+chrome.storage.sync.get(['timerPosition', 'completionSound'], (result) => {
   defaultPosition = result.timerPosition || defaultPosition; // Use saved position or default to "top-left"
   setPosition(defaultPosition); // Apply the position to the timer overlay
+
+  selectedSound = result.completionSound || selectedSound; // Use saved sound or default to "chime"
+  Object.values(sounds).forEach((sound) => {
+    sound.volume = savedVolume; // Use the saved volume
+  });
 });
 
 // Create the timer overlay and controls
@@ -248,6 +253,7 @@ const openSettingsModal = () => {
 
     // Update selected sound
     selectedSound = document.getElementById('sound-select').value;
+    chrome.storage.sync.set({ completionSound: selectedSound });
 
     document.body.removeChild(modal);
   });
