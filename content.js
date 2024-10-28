@@ -7,10 +7,11 @@ let defaultPosition = 'top-left'; // Default timer position
 
 // Preload audio elements
 const sounds = {
-  chime: new Audio(chrome.runtime.getURL('chime.mp3')),
-  beep: new Audio(chrome.runtime.getURL('beep.mp3')),
-  alarm: new Audio(chrome.runtime.getURL('alarm.mp3'))
+  chime: new Audio(chrome.runtime.getURL('audio/chime.mp3')),
+  beep: new Audio(chrome.runtime.getURL('audio/beep.mp3')),
+  alarm: new Audio(chrome.runtime.getURL('audio/alarm.mp3'))
 };
+
 
 // Function to play the selected sound
 const playCompletionSound = () => {

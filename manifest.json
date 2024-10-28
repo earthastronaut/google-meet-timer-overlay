@@ -12,5 +12,16 @@
       "matches": ["https://meet.google.com/*"],
       "js": ["content.js"]
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "audio/chime.mp3",
+        "audio/beep.mp3",
+        "audio/alarm.mp3"
+      ],
+      "matches": ["<all_urls>"]
+    }
   ]
+
 }
