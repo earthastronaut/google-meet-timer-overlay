@@ -41,9 +41,11 @@ let isPaused = true;
 let remainingTime = 0;
 
 const updateDisplay = () => {
-  const minutes = Math.floor(remainingTime / 60);
-  const seconds = remainingTime % 60;
-  document.getElementById('timer-display').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const isNegative = remainingTime < 0;
+  const absTime = Math.abs(remainingTime);
+  const minutes = Math.floor(absTime / 60);
+  const seconds = absTime % 60;
+  document.getElementById('timer-display').textContent = `${isNegative ? '-' : ''}${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
 // Start countdown
@@ -51,13 +53,9 @@ const startCountdown = () => {
   if (countdown) clearInterval(countdown);
   isPaused = false;
   countdown = setInterval(() => {
-    if (!isPaused && remainingTime > 0) {
+    if (!isPaused) {
       remainingTime--;
       updateDisplay();
-    } else if (remainingTime <= 0) {
-      clearInterval(countdown);
-      document.getElementById('toggle-btn').textContent = 'Start';
-      isPaused = true;
     }
   }, 1000);
 };
@@ -89,7 +87,7 @@ const openSettingsModal = () => {
   modal.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
   modal.innerHTML = `
     <label for="start-minutes">Start Minutes:</label>
-    <input type="number" id="start-minutes" min="0" max="120" value="${Math.floor(remainingTime / 60)}">
+    <input type="number" id="start-minutes" min="0" max="120" value="${Math.floor(Math.abs(remainingTime) / 60)}">
     <button id="save-settings-btn">Save</button>
     <button id="close-settings-btn">Close</button>
   `;
