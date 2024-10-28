@@ -2,7 +2,7 @@
 let defaultSeconds = 120; // 2 minutes in seconds
 let startingTime = defaultSeconds; // Save initial start time in seconds for reset
 let remainingTime = startingTime;
-let selectedSound = 'chime'; // Default sound key
+let selectedSound = 'crusade'; // Default sound key
 let defaultPosition = 'top-left'; // Default timer position
 
 // Quick select options in seconds
@@ -13,9 +13,7 @@ const quickSelect10Min = 600;  // 10 minutes
 
 // Preload audio elements
 const sounds = {
-  chime: new Audio(chrome.runtime.getURL('audio/chime.mp3')),
-  beep: new Audio(chrome.runtime.getURL('audio/beep.mp3')),
-  alarm: new Audio(chrome.runtime.getURL('audio/alarm.mp3'))
+  crusade: new Audio(chrome.runtime.getURL('audio/crusade.mp3')),
 };
 
 
@@ -81,10 +79,10 @@ chrome.storage.sync.get(['timerPosition', 'completionSound'], (result) => {
   defaultPosition = result.timerPosition || defaultPosition; // Use saved position or default to "top-left"
   setPosition(defaultPosition); // Apply the position to the timer overlay
 
-  selectedSound = result.completionSound || selectedSound; // Use saved sound or default to "chime"
-  Object.values(sounds).forEach((sound) => {
-    sound.volume = savedVolume; // Use the saved volume
-  });
+  // Check if the selected sound exists in the sounds object; fallback to "chime" if it does not
+  const defaultSound = Object.keys(sounds)[0];
+  selectedSound = result.completionSound && sounds[result.completionSound] ? result.completionSound : defaultSound;
+
 });
 
 const t = {
@@ -192,26 +190,25 @@ const resetTimer = () => {
   document.getElementById('toggle-btn').textContent = t.play;
 };
 
-// Function to set the timer time immediately based on quick select (in seconds)
-const setQuickSelectTime = (seconds) => {
-  remainingTime = seconds;
-  updateDisplay();
-};
-
-
-// Function to close the settings modal
-const closeSettingsModal = () => {
-  const modal = document.getElementById('settings-modal');
-  if (modal) {
-    document.body.removeChild(modal);
-  }
-};
-
-
-// Open settings modal
+// Main function to open settings modal
 const openSettingsModal = () => {
   stopAllSounds(); // Stop sound when settings are opened
 
+  const modal = createMainModal();
+
+  // Append each section to the modal
+  modal.append(createTimerDurationSection(), createSettingsSection(), createActionButtonsSection());
+
+  // Append modal to the document body
+  document.body.appendChild(modal);
+
+  // Set default values in settings
+  document.getElementById('timer-position').value = defaultPosition;
+  document.getElementById('sound-select').value = selectedSound;
+};
+
+// Function to create the main modal container
+const createMainModal = () => {
   const modal = document.createElement('div');
   modal.id = 'settings-modal';
   modal.style.position = 'fixed';
@@ -223,97 +220,159 @@ const openSettingsModal = () => {
   modal.style.borderRadius = '5px';
   modal.style.zIndex = '10000';
   modal.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-  modal.innerHTML = `
-    <div>
-      <h2>Select Timer Duration</h2>
-      <label for="start-minutes">Timer:</label>
-      <input type="number" id="start-minutes" min="0" max="120" value="${Math.floor(startingTime / 60)}">
-      <label for="start-seconds">:</label>
-      <input type="number" id="start-seconds" min="0" max="59" value="${startingTime % 60}">
-      <div>
-        <button id="quick-select-1min">1 Minute</button>
-        <button id="quick-select-2min">2 Minutes</button>
-        <button id="quick-select-5min">5 Minutes</button>
-        <button id="quick-select-10min">10 Minutes</button>
-      </div>
-    </div>
-    <div>
-      <h2>Settings</h2>
-      <div>
-        <label>Timer Position:</label>
-        <select id="timer-position">
-          <option value="top-left">Top Left</option>
-          <option value="top-center">Top Center</option>
-          <option value="top-right">Top Right</option>
-          <option value="middle-left">Middle Left</option>
-          <option value="middle-center">Middle Center</option>
-          <option value="middle-right">Middle Right</option>
-          <option value="bottom-left">Bottom Left</option>
-          <option value="bottom-center">Bottom Center</option>
-          <option value="bottom-right">Bottom Right</option>
-        </select>
-      </div>
-      <div>
-        <label for="sound-select">Completion Sound:</label>
-        <select id="sound-select">
-          <option value="chime">Chime</option>
-          <option value="beep">Beep</option>
-          <option value="alarm">Alarm</option>
-        </select>
-      </div>
-    </div>
-    <div style="text-align: right">
-      <h2></h2>
-      <button id="save-settings-btn">Save</button>
-      <button id="close-settings-btn">Close</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  // Set default values in settings
-  document.getElementById('timer-position').value = defaultPosition;
-  document.getElementById('sound-select').value = selectedSound;
-  // Event listeners for quick select buttons to set time and close modal
-  document.getElementById('quick-select-1min').addEventListener('click', () => {
-    setQuickSelectTime(quickSelect1Min);
-    closeSettingsModal();
-  });
-  document.getElementById('quick-select-2min').addEventListener('click', () => {
-    setQuickSelectTime(quickSelect2Min);
-    closeSettingsModal();
-  });
-  document.getElementById('quick-select-5min').addEventListener('click', () => {
-    setQuickSelectTime(quickSelect5Min);
-    closeSettingsModal();
-  });
-  document.getElementById('quick-select-10min').addEventListener('click', () => {
-    setQuickSelectTime(quickSelect10Min);
-    closeSettingsModal();
-  });
-
-  // Event listeners for saving and closing settings
-  document.getElementById('close-settings-btn').addEventListener('click', closeSettingsModal);
-
-  // Save settings
-  document.getElementById('save-settings-btn').addEventListener('click', () => {
-    const newMinutes = parseInt(document.getElementById('start-minutes').value, 10);
-    const newSeconds = parseInt(document.getElementById('start-seconds').value, 10);
-    startingTime = newMinutes * 60 + newSeconds;
-    remainingTime = startingTime;
-    updateDisplay();
-
-    // Update timer position based on selected option and save it as the default position
-    defaultPosition = document.getElementById('timer-position').value;
-    setPosition(defaultPosition);
-    chrome.storage.sync.set({ timerPosition: defaultPosition });
-
-    // Update selected sound
-    selectedSound = document.getElementById('sound-select').value;
-    chrome.storage.sync.set({ completionSound: selectedSound });
-
-    document.body.removeChild(modal);
-  });
+  return modal;
 };
+
+// Function to create the Timer Duration section
+const createTimerDurationSection = () => {
+  const timerDurationDiv = document.createElement('div');
+  const timerDurationHeader = document.createElement('h2');
+  timerDurationHeader.textContent = "Select Timer Duration";
+
+  const timerLabel = document.createElement('label');
+  timerLabel.textContent = "Timer:";
+
+  const startMinutesInput = document.createElement('input');
+  startMinutesInput.type = 'number';
+  startMinutesInput.id = 'start-minutes';
+  startMinutesInput.min = '0';
+  startMinutesInput.max = '120';
+  startMinutesInput.value = Math.floor(startingTime / 60);
+
+  const colonLabel = document.createElement('label');
+  colonLabel.textContent = ":";
+
+  const startSecondsInput = document.createElement('input');
+  startSecondsInput.type = 'number';
+  startSecondsInput.id = 'start-seconds';
+  startSecondsInput.min = '0';
+  startSecondsInput.max = '59';
+  startSecondsInput.value = startingTime % 60;
+
+  // Quick Select Buttons for Timer Duration
+  const quickSelectDiv = document.createElement('div');
+  quickSelectDiv.append(
+    createQuickSelectButton('1 Minute', 60),
+    createQuickSelectButton('2 Minutes', 120),
+    createQuickSelectButton('5 Minutes', 300),
+    createQuickSelectButton('10 Minutes', 600)
+  );
+
+  // Append elements to the Timer Duration section
+  timerDurationDiv.append(timerDurationHeader, timerLabel, startMinutesInput, colonLabel, startSecondsInput, quickSelectDiv);
+  return timerDurationDiv;
+};
+
+// Helper function to create individual quick-select buttons
+const createQuickSelectButton = (text, timeInSeconds) => {
+  const button = document.createElement('button');
+  button.textContent = text;
+  button.addEventListener('click', () => {
+    setQuickSelectTime(timeInSeconds);
+    closeSettingsModal();
+  });
+  return button;
+};
+
+// Function to set the quick-select time immediately
+const setQuickSelectTime = (seconds) => {
+  remainingTime = seconds;
+  updateDisplay();
+};
+
+// Function to create the Settings section
+const createSettingsSection = () => {
+  const settingsDiv = document.createElement('div');
+  const settingsHeader = document.createElement('h2');
+  settingsHeader.textContent = "Settings";
+
+  // Timer Position dropdown
+  const timerPositionDiv = document.createElement('div');
+  const positionLabel = document.createElement('label');
+  positionLabel.textContent = "Timer Position:";
+  const timerPositionSelect = document.createElement('select');
+  timerPositionSelect.id = 'timer-position';
+
+  const positionOptions = ["top-left", "top-center", "top-right", "middle-left", "middle-center", "middle-right", "bottom-left", "bottom-center", "bottom-right"];
+  positionOptions.forEach(position => {
+    const option = document.createElement('option');
+    option.value = position;
+    option.textContent = position.replace("-", " ").replace(/\b\w/g, (c) => c.toUpperCase()); // Capitalize each word
+    timerPositionSelect.appendChild(option);
+  });
+
+  timerPositionDiv.append(positionLabel, timerPositionSelect);
+
+  // Completion Sound dropdown
+  const soundDiv = document.createElement('div');
+  const soundLabel = document.createElement('label');
+  soundLabel.setAttribute('for', 'sound-select');
+  soundLabel.textContent = "Completion Sound:";
+  const soundSelect = document.createElement('select');
+  soundSelect.id = 'sound-select';
+
+  const soundOptions = ["chime", "beep", "alarm"];
+  soundOptions.forEach(sound => {
+    const option = document.createElement('option');
+    option.value = sound;
+    option.textContent = sound.charAt(0).toUpperCase() + sound.slice(1); // Capitalize first letter
+    soundSelect.appendChild(option);
+  });
+
+  soundDiv.append(soundLabel, soundSelect);
+
+  // Append elements to the Settings section
+  settingsDiv.append(settingsHeader, timerPositionDiv, soundDiv);
+  return settingsDiv;
+};
+
+// Function to create the Action Buttons section
+const createActionButtonsSection = () => {
+  const actionDiv = document.createElement('div');
+  actionDiv.style.textAlign = 'right';
+
+  const saveButton = document.createElement('button');
+  saveButton.id = 'save-settings-btn';
+  saveButton.textContent = 'Save';
+  saveButton.addEventListener('click', saveSettings);
+
+  const closeButton = document.createElement('button');
+  closeButton.id = 'close-settings-btn';
+  closeButton.textContent = 'Close';
+  closeButton.addEventListener('click', closeSettingsModal);
+
+  actionDiv.append(saveButton, closeButton);
+  return actionDiv;
+};
+
+// Function to close the settings modal
+const closeSettingsModal = () => {
+  const modal = document.getElementById('settings-modal');
+  if (modal) {
+    document.body.removeChild(modal);
+  }
+};
+
+// Function to save settings
+const saveSettings = () => {
+  const newMinutes = parseInt(document.getElementById('start-minutes').value, 10);
+  const newSeconds = parseInt(document.getElementById('start-seconds').value, 10);
+  startingTime = newMinutes * 60 + newSeconds;
+  remainingTime = startingTime;
+  updateDisplay();
+
+  // Update timer position based on selected option and save it as the default position
+  defaultPosition = document.getElementById('timer-position').value;
+  setPosition(defaultPosition);
+  chrome.storage.sync.set({ timerPosition: defaultPosition });
+
+  // Update selected sound
+  selectedSound = document.getElementById('sound-select').value;
+  chrome.storage.sync.set({ completionSound: selectedSound });
+
+  closeSettingsModal();
+};
+
 
 // Function to attach event listeners once elements are added to the DOM
 const attachEventListeners = () => {
