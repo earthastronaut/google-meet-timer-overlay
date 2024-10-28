@@ -87,6 +87,13 @@ chrome.storage.sync.get(['timerPosition', 'completionSound'], (result) => {
   });
 });
 
+const t = {
+  play: "⏵",
+  pause: "⏸",
+  reset: "🔄",
+  settings: "⚙️",
+};
+
 // Create the timer overlay and controls
 const timerOverlay = document.createElement('div');
 timerOverlay.id = 'meet-timer-overlay';
@@ -99,9 +106,9 @@ timerOverlay.style.borderRadius = '5px';
 timerOverlay.style.zIndex = '9999';
 timerOverlay.innerHTML = `
   <div id="timer-display">00:00</div>
-  <button id="toggle-btn">Play</button>
-  <button id="reset-btn" style="display: none;">Reset</button>
-  <button id="settings-btn">Settings</button>
+  <button id="toggle-btn" style="background: transparent; color: white; border: none; font-size: 16px;">${t.play}</button>
+  <button id="reset-btn" style="background: transparent; color: white; border: none; font-size: 16px;">${t.reset}</button>
+  <button id="settings-btn" style="background: transparent; color: white; border: none; font-size: 16px;">${t.settings}</button>
 `;
 
 // Add timer overlay to the video container
@@ -168,12 +175,10 @@ const toggleTimer = () => {
   const resetButton = document.getElementById('reset-btn');
   if (isPaused) {
     startCountdown();
-    toggleButton.textContent = 'Pause';
-    resetButton.style.display = 'none';
+    toggleButton.textContent = t.pause;
   } else {
     isPaused = true;
-    toggleButton.textContent = 'Play';
-    resetButton.style.display = 'inline';
+    toggleButton.textContent = t.play;
     stopAllSounds(); // Stop sound on pause
   }
 };
@@ -184,8 +189,7 @@ const resetTimer = () => {
   clearInterval(countdown);
   remainingTime = startingTime;
   updateDisplay();
-  document.getElementById('toggle-btn').textContent = 'Play';
-  document.getElementById('reset-btn').style.display = 'none';
+  document.getElementById('toggle-btn').textContent = t.play;
 };
 
 // Function to set the timer time immediately based on quick select (in seconds)
@@ -221,13 +225,11 @@ const openSettingsModal = () => {
   modal.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
   modal.innerHTML = `
     <div>
-      <label for="start-minutes">Minutes:</label>
+      <h2>Select Timer Duration</h2>
+      <label for="start-minutes">Timer:</label>
       <input type="number" id="start-minutes" min="0" max="120" value="${Math.floor(startingTime / 60)}">
-      <label for="start-seconds">Seconds:</label>
+      <label for="start-seconds">:</label>
       <input type="number" id="start-seconds" min="0" max="59" value="${startingTime % 60}">
-    </div>
-    <div>
-      <label>Quick Select Timer:</label>
       <div>
         <button id="quick-select-1min">1 Minute</button>
         <button id="quick-select-2min">2 Minutes</button>
@@ -236,29 +238,35 @@ const openSettingsModal = () => {
       </div>
     </div>
     <div>
-      <label>Timer Position:</label>
-      <select id="timer-position">
-        <option value="top-left">Top Left</option>
-        <option value="top-center">Top Center</option>
-        <option value="top-right">Top Right</option>
-        <option value="middle-left">Middle Left</option>
-        <option value="middle-center">Middle Center</option>
-        <option value="middle-right">Middle Right</option>
-        <option value="bottom-left">Bottom Left</option>
-        <option value="bottom-center">Bottom Center</option>
-        <option value="bottom-right">Bottom Right</option>
-      </select>
+      <h2>Settings</h2>
+      <div>
+        <label>Timer Position:</label>
+        <select id="timer-position">
+          <option value="top-left">Top Left</option>
+          <option value="top-center">Top Center</option>
+          <option value="top-right">Top Right</option>
+          <option value="middle-left">Middle Left</option>
+          <option value="middle-center">Middle Center</option>
+          <option value="middle-right">Middle Right</option>
+          <option value="bottom-left">Bottom Left</option>
+          <option value="bottom-center">Bottom Center</option>
+          <option value="bottom-right">Bottom Right</option>
+        </select>
+      </div>
+      <div>
+        <label for="sound-select">Completion Sound:</label>
+        <select id="sound-select">
+          <option value="chime">Chime</option>
+          <option value="beep">Beep</option>
+          <option value="alarm">Alarm</option>
+        </select>
+      </div>
     </div>
-    <div>
-      <label for="sound-select">Completion Sound:</label>
-      <select id="sound-select">
-        <option value="chime">Chime</option>
-        <option value="beep">Beep</option>
-        <option value="alarm">Alarm</option>
-      </select>
+    <div style="text-align: right">
+      <h2></h2>
+      <button id="save-settings-btn">Save</button>
+      <button id="close-settings-btn">Close</button>
     </div>
-    <button id="save-settings-btn">Save</button>
-    <button id="close-settings-btn">Close</button>
   `;
   document.body.appendChild(modal);
 
