@@ -1,8 +1,22 @@
 // Initial default values
-let defaultMinutes = 2;
-let defaultSeconds = 0;
-let startingTime = defaultMinutes * 60; // Save initial start time to reset to
+let defaultSeconds = 120; // 2 minutes in seconds
+let startingTime = defaultSeconds; // Save initial start time in seconds for reset
 let remainingTime = startingTime;
+let selectedSound = 'chime'; // Default sound key
+
+// Preload audio elements
+const sounds = {
+  chime: new Audio(chrome.runtime.getURL('chime.mp3')),
+  beep: new Audio(chrome.runtime.getURL('beep.mp3')),
+  alarm: new Audio(chrome.runtime.getURL('alarm.mp3'))
+};
+ls
+// Function to play the selected sound
+const playCompletionSound = () => {
+  if (sounds[selectedSound]) {
+    sounds[selectedSound].play();
+  }
+};
 
 // Create the timer overlay and controls
 const timerOverlay = document.createElement('div');
@@ -46,6 +60,7 @@ observer.observe(document.body, { childList: true, subtree: true });
 let countdown;
 let isPaused = true;
 
+// Convert seconds to display format (MM:SS)
 const updateDisplay = () => {
   const isNegative = remainingTime < 0;
   const absTime = Math.abs(remainingTime);
@@ -62,6 +77,9 @@ const startCountdown = () => {
     if (!isPaused) {
       remainingTime--;
       updateDisplay();
+      if (remainingTime === 0) {
+        playCompletionSound();
+      }
     }
   }, 1000);
 };
@@ -129,13 +147,22 @@ const openSettingsModal = () => {
         <option value="bottom-right">Bottom Right</option>
       </select>
     </div>
+    <div>
+      <label for="sound-select">Completion Sound:</label>
+      <select id="sound-select">
+        <option value="chime">Chime</option>
+        <option value="beep">Beep</option>
+        <option value="alarm">Alarm</option>
+      </select>
+    </div>
     <button id="save-settings-btn">Save</button>
     <button id="close-settings-btn">Close</button>
   `;
   document.body.appendChild(modal);
 
-  // Set default position
+  // Set default values in settings
   document.getElementById('timer-position').value = 'top-left';
+  document.getElementById('sound-select').value = selectedSound;
 
   // Event listeners for quick-select buttons
   document.getElementById('quick-1min').addEventListener('click', () => setQuickTime(1));
@@ -143,7 +170,7 @@ const openSettingsModal = () => {
   document.getElementById('quick-5min').addEventListener('click', () => setQuickTime(5));
   document.getElementById('quick-10min').addEventListener('click', () => setQuickTime(10));
 
-  // Set quick time
+  // Set quick time in seconds
   const setQuickTime = (minutes) => {
     document.getElementById('start-minutes').value = minutes;
     document.getElementById('start-seconds').value = 0;
@@ -166,17 +193,18 @@ const openSettingsModal = () => {
     const position = document.getElementById('timer-position').value;
     setPosition(position);
 
+    // Update selected sound
+    selectedSound = document.getElementById('sound-select').value;
+
     document.body.removeChild(modal);
   });
 };
 
 // Set timer position
 const setPosition = (position) => {
-  // Reset position styles
   timerOverlay.style.top = timerOverlay.style.bottom = timerOverlay.style.left = timerOverlay.style.right = 'auto';
   timerOverlay.style.transform = '';
 
-  // Apply new position styles
   switch (position) {
     case 'top-left':
       timerOverlay.style.top = '10px';
